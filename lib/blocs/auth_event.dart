@@ -2,6 +2,8 @@ abstract class AuthEvent {}
 
 class AppStarted extends AuthEvent {}
 
+class CheckAuthStatus extends AuthEvent {}
+
 class LoggedIn extends AuthEvent {
   final String email;
   final String password;

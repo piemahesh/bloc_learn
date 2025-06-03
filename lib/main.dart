@@ -1,4 +1,6 @@
 import 'package:bloc_learn/blocs/auth_bloc.dart';
+import 'package:bloc_learn/blocs/block.dart';
+import 'package:bloc_learn/config/app_logger.dart';
 import 'package:bloc_learn/config/app_router.dart';
 import 'package:bloc_learn/repositories/repositories.dart';
 import 'package:bloc_learn/services/service.dart';
@@ -39,6 +41,9 @@ void main() async {
 
   final authRepository = AuthRepository();
   final authBloc = AuthBloc(authRepository);
+  authBloc.add(CheckAuthStatus());
+
+  AppLogger.i("auth bloc $authBloc");
   final appRouter = AppRouter(authBloc: authBloc);
 
   runApp(

@@ -13,6 +13,11 @@ class AuthRepository {
       final user = await _authSerVice.login(email, password);
       if (user != null) {
         await _userBox.put(boxKey, user);
+        if (!_userBox.containsKey(boxKey)) {
+          await _userBox.put(boxKey, user);
+        } else {
+          AppLogger.w('User exists: ${_userBox.get(boxKey)?.name}');
+        }
         return user;
       }
       return null;
