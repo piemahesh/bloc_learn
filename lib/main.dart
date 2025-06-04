@@ -2,6 +2,8 @@ import 'package:bloc_learn/blocs/auth_bloc.dart';
 import 'package:bloc_learn/blocs/block.dart';
 import 'package:bloc_learn/config/app_logger.dart';
 import 'package:bloc_learn/config/app_router.dart';
+import 'package:bloc_learn/message_bloc/message_bloc.dart';
+import 'package:bloc_learn/repositories/message_repositories.dart';
 import 'package:bloc_learn/repositories/repositories.dart';
 import 'package:bloc_learn/services/service.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +40,9 @@ import 'package:go_router/go_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await HiveService.init();
-
+  final messageRepository = MessageRepository();
   final authRepository = AuthRepository();
+
   final authBloc = AuthBloc(authRepository);
   authBloc.add(CheckAuthStatus());
 
@@ -47,7 +50,17 @@ void main() async {
   final appRouter = AppRouter(authBloc: authBloc);
 
   runApp(
-    BlocProvider.value(value: authBloc, child: MyApp(router: appRouter.router)),
+    // BlocProvider.value(value: authBloc, child: MyApp(router: appRouter.router)),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<MessageBloc>(
+          create: (_) => MessageBloc(messageRepository),
+        ),
+        // Add other BLoCs here if needed
+      ],
+      child: MyApp(router: appRouter.router),
+    ),
   );
 }
 

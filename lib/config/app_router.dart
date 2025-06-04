@@ -1,23 +1,9 @@
 import 'package:bloc_learn/blocs/block.dart';
+import 'package:bloc_learn/screens/chat_screen.dart';
 import 'package:bloc_learn/screens/screen.dart';
 import 'package:bloc_learn/utils/utils.dart';
 import 'package:go_router/go_router.dart';
 
-// final appRouter = GoRouter(
-//   initialLocation: '/',
-//   routes: <RouteBase>[
-//     GoRoute(
-//       path: '/',
-//       name: "login",
-//       builder: (context, state) => const LoginScreen(),
-//     ),
-//     GoRoute(
-//       path: '/home',
-//       name: 'home',
-//       builder: (context, state) => const HomeScreen(),
-//     ),
-//   ],
-// );
 class AppRouter {
   final AuthBloc authBloc;
 
@@ -36,6 +22,7 @@ class AppRouter {
     routes: [
       GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
     ],
   );
 }

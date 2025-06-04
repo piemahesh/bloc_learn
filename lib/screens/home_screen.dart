@@ -1,9 +1,11 @@
 import 'package:bloc_learn/blocs/block.dart';
+import 'package:bloc_learn/config/app_logger.dart';
 import 'package:bloc_learn/helper/destructure_helper.dart';
 import 'package:bloc_learn/models/model.dart';
 import 'package:bloc_learn/repositories/auth_repositories.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,6 +34,13 @@ class HomeScreen extends StatelessWidget {
                 Text("user name is ${user.name}"),
                 Text("user email is ${user.email}"),
                 Text("user id is ${user.id}"),
+                ElevatedButton(
+                  onPressed: () {
+                    context.go("/chat");
+                    AppLogger.w("Go to chat");
+                  },
+                  child: Text("Chats"),
+                ),
               ],
             );
           }
