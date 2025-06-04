@@ -75,7 +75,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _chatController.insertMessage(
                   TextMessage(
                     // Better to use UUID or similar for the ID - IDs must be unique
-                    id: _currentUserId,
+                    id: mes.id,
                     authorId: mes.senderId,
                     createdAt: DateTime.now().toUtc(),
                     text: mes.text,
@@ -95,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   authorId: _currentUserId,
                   text: text,
                 );
-                _chatController.insertMessage(message);
+                // _chatController.insertMessage(message);
                 _onSendPressed(message);
               },
             );
