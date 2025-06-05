@@ -28,7 +28,16 @@ class LoginScreen extends StatelessWidget {
                   );
                   AppLogger.e("Pressed the button");
                 },
-                child: const Text('Login'),
+                child: const Text('Login as Mahesh'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                    LoggedIn('ocenmahesh@gmail.com', '1234'),
+                  );
+                  AppLogger.e("Pressed the button");
+                },
+                child: const Text('Login as Tharun'),
               ),
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {

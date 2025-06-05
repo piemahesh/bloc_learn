@@ -55,7 +55,7 @@ void main() async {
       providers: [
         BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<MessageBloc>(
-          create: (_) => MessageBloc(messageRepository),
+          create: (_) => MessageBloc(messageRepository)..add(LoadMessages()),
         ),
         // Add other BLoCs here if needed
       ],

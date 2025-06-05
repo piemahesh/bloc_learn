@@ -1,15 +1,15 @@
-import 'dart:math';
-
+import 'package:bloc_learn/blocs/auth_bloc.dart';
+import 'package:bloc_learn/blocs/auth_state.dart';
 import 'package:bloc_learn/config/app_logger.dart';
 import 'package:bloc_learn/message_bloc/message_bloc.dart';
+import 'package:bloc_learn/models/chat_message.dart';
 import 'package:bloc_learn/screens/custom_text_message_widget.dart';
 import 'package:bloc_learn/utils/chat_message_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart';
-import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'package:flutter_chat_ui/flutter_chat_ui.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_chat_ui/flutter_chat_ui.dart' as chats_ui;
+import 'package:go_router/go_router.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -19,89 +19,128 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final ChatController _chatController;
-
-  static const String _currentUserId = 'user1';
-
   @override
   void initState() {
     super.initState();
-    // _initMockMessages();
-    _chatController = InMemoryChatController();
-    _loadMessages();
-  }
-
-  // void _initMockMessages() {
-  //   // context.read<MessageBloc>().add(LoadMockMessage());
-  // }
-
-  void _loadMessages() {
-    context.read<MessageBloc>().add(LoadMessages());
-  }
-
-  void _onSendPressed(TextMessage message) {
-    context.read<MessageBloc>().add(SendMessage(message.text, _currentUserId));
-  }
-
-  Widget _buildCustomMessage(types.TextMessage message, {required User user}) {
-    if (message is TextMessage) {
-      return CustomTextMessageWidget(
-        message: message,
-        isMe: message.author.id == _currentUserId,
-      );
-    }
-    return const SizedBox.shrink(); // fallback for unsupported types
-  }
-
-  void _handleSend(types.PartialText message) {
-    context.read<MessageBloc>().add(SendMessage(message.text, _currentUserId));
-    AppLogger.i("message  $message");
-  }
-
-  @override
-  void dispose() {
-    _chatController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        actionsPadding: EdgeInsets.all(5),
+        backgroundColor: Colors.deepPurple,
+        toolbarHeight: 35,
+        title: Text("Chats", style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        actions: [
+          Icon(Icons.notification_important_outlined, color: Colors.white),
+        ],
+      ),
       body: SafeArea(
-        child: BlocBuilder<MessageBloc, MessageState>(
+        child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            if (state is MessagesLoaded) {
-              state.messages.forEach((mes) {
-                _chatController.insertMessage(
-                  TextMessage(
-                    // Better to use UUID or similar for the ID - IDs must be unique
-                    id: mes.id,
-                    authorId: mes.senderId,
-                    createdAt: DateTime.now().toUtc(),
-                    text: mes.text,
-                  ),
-                );
-              });
+            if (state is Authenticated) {
+              return _Chats(
+                user: User(name: state.user.name, id: state.user.id),
+              );
             }
-            return Chat(
-              chatController: _chatController,
-              resolveUser: (UserID id) async {
-                return User(id: id, name: 'John Doe');
-              },
-              currentUserId: _currentUserId,
-              onMessageSend: (text) {
-                TextMessage message = TextMessage(
-                  id: Uuid().v4(),
-                  authorId: _currentUserId,
-                  text: text,
-                );
-                // _chatController.insertMessage(message);
-                _onSendPressed(message);
-              },
-            );
+            return CircularProgressIndicator();
           },
         ),
       ),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            SizedBox(height: 60),
+            ElevatedButton(
+              onPressed: () {
+                context.go("/home");
+              },
+              child: Text("Go to home"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// chat widget
+
+class _Chats extends StatefulWidget {
+  final User user;
+
+  const _Chats({super.key, required this.user});
+
+  @override
+  State<_Chats> createState() => _ChatsState();
+}
+
+class _ChatsState extends State<_Chats> {
+  final InMemoryChatController _chatController = InMemoryChatController();
+  final Set<String> _insertedMessageIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initial load event if needed
+    context.read<MessageBloc>().add(LoadMessages());
+  }
+
+  void _onMessageSend(String text) {
+    context.read<MessageBloc>().add(SendMessage(text, widget.user.id));
+  }
+
+  void _handleIncomingMessages(List<ChatMessage> msg) {
+    final messages = ChatMessageMapper.toChatTypes(msg);
+    AppLogger.wtf("listening ............................");
+    for (final msg in messages) {
+      if (!_insertedMessageIds.contains(msg.id)) {
+        _chatController.insertMessage(
+          CustomMessage(
+            id: msg.id,
+            authorId: msg.authorId,
+            metadata: msg.metadata,
+          ),
+        );
+        _insertedMessageIds.add(msg.id);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MessageBloc, MessageState>(
+      buildWhen: (_, _) => true,
+      builder: (context, state) {
+        AppLogger.i("Bloc Builder is building ......");
+        // Initial build, maybe show loading indicator
+        if (state is MessageInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is MessagesLoaded) {
+          _handleIncomingMessages(state.messages);
+        }
+
+        return chats_ui.Chat(
+          chatController: _chatController,
+          currentUserId: widget.user.id,
+          resolveUser: (id) async => User(id: id),
+          onMessageSend: _onMessageSend,
+          backgroundColor: Colors.white10,
+          userCache: UserCache(maxSize: 100),
+          builders: Builders(
+            customMessageBuilder: (context, message, messageWidth) {
+              // AppLogger.wtf(message.toJson());
+              return CustomTextMessageWidget(
+                message: message,
+                isMe: widget.user.id == message.authorId,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

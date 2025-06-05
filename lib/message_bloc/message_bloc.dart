@@ -22,9 +22,9 @@ class MessageBloc extends Bloc<MessageEvent, MessageState> {
       emit(MessagesLoaded(messages));
     });
     //   load mock data
-    on<LoadMockMessage>((event, emit) async {
-      await _repository.loadMockMessages();
-      AppLogger.d("mock message loaded successfully");
-    });
+    // on<LoadMockMessage>((event, emit) async {
+    //   await _repository.loadMockMessages();
+    //   AppLogger.d("mock message loaded successfully");
+    // });
   }
 }

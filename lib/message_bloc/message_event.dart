@@ -17,5 +17,3 @@ class SendMessage extends MessageEvent {
   @override
   List<Object> get props => [text, senderId];
 }
-
-class LoadMockMessage extends MessageEvent {}
